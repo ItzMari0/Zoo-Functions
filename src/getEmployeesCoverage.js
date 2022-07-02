@@ -1,27 +1,30 @@
 const { employees, species } = require('../data/zoo_data');
 const data = require('../data/zoo_data');
 
-const getSpecies = (param) => employees
-  .filter((employee) => employee.id === Object.values(param)[0])
-  .map((employee) => employee.responsibleFor)[0];
-
-function getEmployeesCoverage(param) {
-  if (employees.filter((employee) =>
-    employee.id === Object.values(param)[0]
-    || employee.firstName === Object.values(param)[0]
-    || employee.lastName === Object.values(param)[0])) {
-    return {
-      id: Object.values(param)[0],
-      fullName: employees
-        .filter((employee) => employee.id === Object.values(param)[0])
-        .map((employee) => `${employee.firstName} ${employee.lastName}`)[0],
-      species: getSpecies(param),
-      locations: species.filter((animal) => getSpecies(param).includes(animal.name)
-      || getSpecies(param).includes(animal.id)).map((animal) => animal.location),
-    };
+function getSpecies(param) {
+  const worker = Object.values(param)[0];
+  const list = employees.find(
+    ({ id: number, firstName: first, lastName: last }) => [number, first, last].includes(worker),
+  );
+  if (!list) {
+    throw new Error('Informações inválidas');
   }
+  const { id, firstName, lastName, responsibleFor: animalIds } = list;
+  const specie = species.filter(({ id: animalId }) => animalIds
+    .some((animal) => animal === animalId));
+  return {
+    id,
+    fullName: `${firstName} ${lastName}`,
+    species: specie.map(({ name }) => name),
+    locations: specie.map(({ location }) => location),
+  };
 }
 
-// console.log(getEmployeesCoverage({ id: 'c1f50212-35a6-4ecd-8223-f835538526c2' }));
+function getEmployeesCoverage(param) {
+  if (param) {
+    return getSpecies(param);
+  }
+  return employees.reduce((acc, { id }) => [...acc, getSpecies({ id })], []);
+}
 
 module.exports = getEmployeesCoverage;
